@@ -1,28 +1,25 @@
 #include "FileReader.h";
 #include <iostream>
 #include <fstream>
-#include <string>
 
-using namespace std;
-
-const char* extractLines(const char* fileName) {
+string extractLines(const char* fileName) {
 	ifstream file;
 	file.open(fileName);
 
 	string lines;
 
 	if (file.is_open()) {
-		std::string line;
+		string line;
 
-		while (std::getline(file, line)) {
+		while (getline(file, line)) {
 			lines += line + "\n";
 		}
 
 	}
 
-	return lines.c_str();
+	return lines;
 }
 
-const char* formatLines(const char* lines) {
+string formatLines(const char* lines) {
 	return nullptr;
 }
