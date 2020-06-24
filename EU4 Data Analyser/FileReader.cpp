@@ -59,42 +59,6 @@ string getData(string line) {
 	return line.substr(chr + 1, line.size());
 }
 
-// Extracts the data from the lines into the formatBlock struct
-formatBlock* extractData(string lines) {
-	stringstream lineStream(lines);
-	string line;
-
-	formatBlock* current = new formatBlock();
-
-	while (getline(lineStream, line, '\n')) {
-		line = trim(line);
-
-		if (line.find('{') != string::npos) {
-			if (line.find('}') != string::npos) {
-				current->dataPoints.push_back(line);
-			}
-			else {
-				formatBlock* child = new formatBlock();
-				child->name = getName(line);
-				child->parent = current;
-
-				current->childs.push_back(child);
-
-				current = child;
-			}
-		}
-		else if (line.find('}') != string::npos) {
-			current = current->parent;
-		}
-		else {
-			current->dataPoints.push_back(line);
-		}
-
-	}
-
-	return current;
-}
-
 // Formats the data into a csv format
 string formatData(formatBlock* data, vector<string> dataPoints) {
 	string formatted = "id,";
@@ -130,29 +94,56 @@ string formatData(formatBlock* data, vector<string> dataPoints) {
 	return formatted;
 }
 
-string FileReader::extractLines(const char* fileName) {
+// Extracts the lines from the file denoted by the file name into a format block
+formatBlock* extractLines(string fileName) {
+	cout << "INFO: Extraction Started!" << endl;
+
 	ifstream file;
 	file.open(fileName);
 
-	string lines;
+	formatBlock* current = new formatBlock();
 
 	if (file.is_open()) {
 		string line;
 
 		while (getline(file, line)) {
-			lines += line + "\n";
+			line = trim(line);
+
+			if (line.find('{') != string::npos) {
+				if (line.find('}') != string::npos) {
+					current->dataPoints.push_back(line);
+				}
+				else {
+					formatBlock* child = new formatBlock();
+					child->name = getName(line);
+					child->parent = current;
+
+					current->childs.push_back(child);
+
+					current = child;
+				}
+			}
+			else if (line.find('}') != string::npos) {
+				current = current->parent;
+			}
+			else {
+				current->dataPoints.push_back(line);
+			}
 		}
 
 	}
 
 	file.close();
-	return lines;
+
+	cout << "INFO: Extraction Completed!" << endl;
+
+	return current;
 }
 
-string FileReader::formatLines(string lines) {
-	formatBlock* data = extractData(lines);
+string FileReader::formatLines(string fileName) {
+	formatBlock* data = extractLines(fileName);
 
-	formatBlock* provinces;
+	formatBlock* provinces = NULL;
 
 	for (int i = 0; i < data->childs.size(); i++) {
 		if (data->childs[i]->name == "provinces") {

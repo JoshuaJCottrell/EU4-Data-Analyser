@@ -1,5 +1,12 @@
 #include "CsvWriter.h"
 
-void writeToCsv(const char* fileName, const char* text)
-{
+#include <iostream>;
+#include <fstream>;
+
+using namespace std;
+
+void CsvWriter::writeToCsv(std::string fileName, std::string text) {
+	ofstream file(fileName + ".csv");
+	file << text;
+	file.close();
 }
