@@ -1,8 +1,11 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+using namespace std;
 
 namespace CsvWriter {
-	// Writes the given text to a csv file specified by the file name
-	void writeToCsv(std::string fileName, std::string text);
+	// Writes a batch of csv files from the text given
+	void writeToCsv(vector<string> text);
 }

@@ -4,6 +4,13 @@
 #include <fstream>
 #include <vector>
 
+// The struct used to organise what data is extracted 
+struct entity {
+	string name;
+	vector<string> dataPoints;
+	bool useNameAsID;
+};
+
 // Recursive struct that helps store the blocks of data during formatting
 struct formatBlock {
 	formatBlock* parent;
@@ -60,8 +67,14 @@ string getData(string line) {
 }
 
 // Formats the data into a csv format
-string formatData(formatBlock* data, vector<string> dataPoints) {
-	string formatted = "id,";
+string formatData(formatBlock* data, entity ent) {
+	vector<string> dataPoints = ent.dataPoints;
+
+	string formatted = "";
+
+	if (ent.useNameAsID) {
+		formatted += "id,";
+	}
 
 	vector<string> d;
 	d.push_back("");
@@ -74,12 +87,20 @@ string formatData(formatBlock* data, vector<string> dataPoints) {
 	formatted = formatted.substr(0, formatted.size() - 1) + "\n";
 
 	for (int i = 0; i < data->childs.size(); i++) {
-		d[0] = data->childs[i]->name;
+		if (ent.useNameAsID) {
+			d[0] = data->childs[i]->name;
+		}
 
 		for (int n = 0; n < dataPoints.size(); n++) {
 			for (string s : data->childs[i]->dataPoints) {
 				if (dataPoints[n] == getName(s)) {
-					d[n + 1] = getData(s);
+					int index = n;
+
+					if (ent.useNameAsID) {
+						index += 1;
+					}
+
+					d[index] = getData(s);
 				}
 			}
 		}
@@ -140,22 +161,41 @@ formatBlock* extractLines(string fileName) {
 	return current;
 }
 
-string FileReader::formatLines(string fileName) {
-	formatBlock* data = extractLines(fileName);
+// Formats all of the data into a batch of csv text using the entities given
+vector<string> formatAllData(formatBlock* data, vector<entity> entities) {
+	vector<string> formattedData;
 
-	formatBlock* provinces = NULL;
+	for (int i = 0; i < entities.size(); i++) {
+		formattedData.push_back(entities[i].name);
+		formattedData.push_back("");
+	}
 
-	for (int i = 0; i < data->childs.size(); i++) {
-		if (data->childs[i]->name == "provinces") {
-			provinces = data->childs[i];
-			break;
+	for (formatBlock* child : data->childs) {
+		for (int i = 0; i < entities.size(); i++) {
+			if (child->name == entities[i].name) {
+				formattedData[i * 2 + 1] = formatData(child, entities[i]);
+				break;
+			}
 		}
 	}
-	delete data;
 
-	vector<string> points;
+	return formattedData;
+}
 
-	points.push_back("name");
+vector<string> FileReader::formatLines(string fileName) {
+	vector<entity> entities;
 
-	return formatData(provinces, points);
+	entity provinces;
+	provinces.name = "provinces";
+	provinces.dataPoints.push_back("name");
+	provinces.useNameAsID = true;
+	entities.push_back(provinces);
+
+	entity countries;
+	countries.name = "countries";
+	countries.dataPoints.push_back("prestige");
+	countries.useNameAsID = true;
+	entities.push_back(countries);
+
+	return formatAllData(extractLines(fileName), entities);
 }

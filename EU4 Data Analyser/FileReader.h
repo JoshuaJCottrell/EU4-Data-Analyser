@@ -1,9 +1,10 @@
 #pragma once
-#include<string>
+#include<string>;
+#include <vector>;
 
 using namespace std;
 
 namespace FileReader {
-	// Formats the given lines into csv text
-	string formatLines(string lines);
+	// Formats the given lines into a batch of csv text
+	vector<string> formatLines(string lines);
 }
